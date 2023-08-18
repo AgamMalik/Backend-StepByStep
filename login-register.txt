@@ -20,3 +20,77 @@
 	-use cors middleware
 	-create server
 	-listen port/ server
+
+3. create connection with database
+	-build a database in mongodb
+	-connect your application and copy url from mongodb cloud
+	-paste that url in .env file
+	-now connect to database in server.js/index.js(mongoose.connect(process.env.xyz)).
+	-now if you want to start server only when the connection with the database is established .. then use..
+	(mongoose.connect(process.env.xyz).then(() =>{server.listen(PORT, ()=> {console(server is listening)} })
+	.catch((err)=>{clg})
+
+4. now create server folder structures
+
+5. create routes,controllers,middleware, models folders
+
+6. create a file for authentication in routes folder(authRoutes.js)
+	-import express
+	-creater a router object to configure routes
+
+	'create routes for register and login'
+	-router.post('/register', (req,res) => {res.send('register routes')})
+         now check it.
+        -router.post('/login', (req,res) => {res.send('login routes')})
+         now check it.
+
+	-export it(router)
+
+	"however we will transfer the logic to the controller folder later"
+
+7. import this authRoutes folder in server.js file
+	-const authRoutes = require(xyz)
+	-now create a common middleware in server.js to register the routes before all the dedicated routes
+	"app.use("/api/auth", authRoutes)
+
+8. now check if routes are working or not in postman
+
+9. now move the controllers to the controllers folder
+	-create a new folder named auth in controller
+	-now create three files...1.authControllers.js...2.postLogin.js...3.postRegister.js
+	-in authControllers file import postLogin and postRegister and export them.
+	"exports.controllers = {postLogin, postRegister,}
+
+	-in postLogin, postRegister cut paste the controller logic from authRoutes.js and make them async
+	 and in authControllers.js import postLogin and postRegister.
+
+	-now in authRoutes.js require authentication handler from authController.js
+	-now add that handler(authController) in register and login route
+	"router.post('/register', authControllers.controllers.postLogin)"
+	"router.post('/login', authControllers.controllers.postRegister)"
+
+	-check again in postman
+
+10. before we let our server to execute the logic in postRegister, postLogin controllers , we need to validate the data which is coming
+	-require Joi
+	-to make joi working with express , we need to require one more package(validator) express-joi-validation
+	"const Joi = require('joi')"
+	"const validator = require('express-joi-validation').createValidator({})"
+
+	-now create validate schema fro every request coming before it go to our controller
+	"const registerSchema = Joi.object({
+  	 username: Joi.string().min(3).max(12).required(),
+  	 password: Joi.string().min(6).max(12).required(),
+  	 mail: Joi.string().email().required(),
+	 });
+
+	const loginSchema = Joi.object({
+ 	 password: Joi.string().min(6).max(12).required(),
+ 	 mail: Joi.string().email().required(),
+	 });"
+
+	-now use this validate schema before controllers
+	"router.post("/register", validator.body(registerSchema), authControllers.controllers.postRegister);
+	 router.post("/login", validator.body(loginSchema), authControllers.controllers.postLogin);"
+
+	-test it in postman now
