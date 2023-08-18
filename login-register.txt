@@ -1,0 +1,22 @@
+1. install dependencies
+	-express
+	-express-joi-validation (to validate the data before sending it to the controllers)
+	-joi 
+	-jsonwebtoken
+	-mongoose
+	-cors
+	-dotenv
+	-bcrypt
+	-nodemon
+
+2. -create server(express/node)(in sever/index file)
+   -import http package
+   -import cors, mongoose
+   -import dotenv and config it
+
+	-create port
+	-create express app
+	-use express.json middleware to change all the incoming data to json format
+	-use cors middleware
+	-create server
+	-listen port/ server
