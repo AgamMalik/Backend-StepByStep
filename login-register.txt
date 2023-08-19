@@ -94,3 +94,110 @@
 	 router.post("/login", validator.body(loginSchema), authControllers.controllers.postLogin);"
 
 	-test it in postman now
+
+11. create a user model in models folder (user.js)
+	-require mongoose
+	-create userSchema(with type, unique etc)
+	-export it
+
+12. create postRegister controller logic
+ 	-make (req, res) asynsc=====> async(req, res)
+	-inside it write try catch block
+	-in catch(err)==> return res.status(500).send("")
+
+	-in try
+	-get username, mail, password from req.body (const {username, password, mail} = req.body)
+
+	-check if user already exists using mail
+		-first require User from models folder
+		-const userExists = await User.exists({mail:mail.toLowerCase()})
+			-if user exists, return status 409 with message
+
+	-now encrypt the password
+		-first require bcrypt
+		-const encryptedPassword = await bcrypt.hash(password, salt)
+
+	-create a user document and save it in database
+		- const user = await User.create({
+     		  username,
+    		  mail: mail.toLowerCase(),
+   	 	  password: encryptedPassword
+  		  })
+
+	-create a jwt token(will write its logic after creating login logic first)
+		-const token = jwt.sign(
+   		   {
+   		     userId: user._id,
+   		     mail:mail,
+   		   },
+   		     process.env.TOKEN_KEY,  (create this TOKEN_KEY in .env file)
+   		   {
+   		     expiresIn: "24h"
+   		   }
+   		   ) 
+
+	-when all the above process is successfull, send the response to the client
+		-res.status(201).json({
+    		 userDetails: {
+   	         mail: user.mail,
+     	         token: token,
+     	         username: user.username,
+   		   },
+  		  })
+
+	-test it in postman
+
+13. create postLogin controller logic
+	-require User from models folder
+	-require bcrypt...(to compare the passwords)
+
+	-make (req, res) asynsc=====> async(req, res)
+	-inside it write try catch block
+	-in catch(err)==> return res.status(500).send("")
+
+	-in try
+	-get  mail, password from req.body (const {password, mail} = req.body)
+
+	-find the user in dtatbase
+		-const user = await User.findOne({mail: mail.toLowerCase()})
+
+	-if user is there and password matches
+		-if(user && (await bcrypt.compare(password, user.password))){
+
+    		  // send new token(create it later)
+    		     const token = jwt.sign(
+     		    {
+    	    	     userId: user._id,
+       		     mail: mail,
+    		     },
+     		     process.env.TOKEN_KEY,
+     		    {
+      		     expiresIn: "24h",
+    		     }
+    		     );
+
+		    return res.status(200).json({
+       		    userDetails: {
+        	    mail: user.mail,
+        	    token: token,
+        	    username: user.username,
+      		        },
+    		      });
+  		  }
+
+	-if user not found
+		-return res.status(400).send('Invalid credentials. Please try again')
+
+	-test it in postman
+
+14. now create jwt where it is required
+	-require jwt in postLogin and postRegister
+	-we are creating it like if someone registers..he will automatically login and token will be created for him
+	-create jwt token in point 12
+	-create jwt token in point 13
+
+	-test it in postman...if we are getting token on successful register
+	-later we will use this token to get access to restricted routes in our server
+
+15. create a middleware to check if token is valid
+	-if the token is invalid ..wont be able to reach controllers of this route
