@@ -199,5 +199,46 @@
 	-test it in postman...if we are getting token on successful register
 	-later we will use this token to get access to restricted routes in our server
 
-15. create a middleware to check if token is valid
+15. create a middleware to check if token is valid(named auth.js)
 	-if the token is invalid ..wont be able to reach controllers of this route
+
+	-require jwt
+	-const config = process.env
+	
+	-create a function to verify token
+		-the purpose of this function is to get the token sent from client side
+		-we are getting the token from req.body
+
+		-const verifyToken = (req, res, next) => {
+   		 let token = req.body.token || req.query.token || req.headers['authorization'];
+
+   		 if(!token){
+   		     return res.status(403).send('A token is required for authentication');
+   		 }
+   		 try {
+   		     token = token.replace(/^Bearer\s+/, "");
+
+   		     const decoded = jwt.verify(token, config.TOKEN_KEY);
+
+		     //add user from payload(it has the payload so we can send any data that we want with it)
+		     now we want to take the user from token...remember we set the id...it is sending the userId and    		     we wanna put that in req.user.. 
+		     so that whenever the token is sent..we have that user stored in request value
+		     (we can set any req variables in middleware functions)
+
+   		     req.user = decoded;
+
+   		 } catch (err) {
+   		     return res.status(401).send('Invalid token');
+   		   }
+
+  		  return next();
+		 }
+
+		-export it
+
+16. create a test route in authRoutes.js to check if our middleware is working
+	-require that middleware in authRoutes.js
+	-// test routes to verify if our middleware is working
+	  router.get("/test", auth, (req, res) => {
+	  res.send("request passed");
+	  })
